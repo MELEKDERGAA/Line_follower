@@ -1,0 +1,76 @@
+#define sensor1 A0
+#define sensor2 A1
+#define sensor3 A2
+#define sensor4 A3
+#define sensor5 A6
+//-------------------------------------------//
+#define motorA1 3
+#define motorA2 5
+#define motorB1 6
+#define motorB2 9
+//-------------------------------------------//
+// Define the PID constants
+float kp = 1.0;
+float ki = 0.0;
+float kd = 0.0;
+
+// Define the PID variables
+float error = 0.0;
+float integral = 0.0;
+float derivative = 0.0;
+float previous_error = 0.0;
+float output1 = 0.0;
+float output2 = 0.0;
+float output3 = 0.0;
+float output4 = 0.0;
+void setup() {
+  Serial.begin(9600);
+  pinMode(sensor1,INPUT);
+  pinMode(sensor2,INPUT);
+  pinMode(sensor3,INPUT);
+  pinMode(sensor4,INPUT);
+  pinMode(sensor5,INPUT);
+  pinMode(motorA1,OUTPUT);
+  pinMode(motorA2,OUTPUT);
+  pinMode(motorB1,OUTPUT);
+  pinMode(motorB2,OUTPUT);
+}
+
+void loop() {
+  int out1=analogRead(sensor1);
+  int out2=analogRead(sensor2);
+  int out3=analogRead(sensor3);
+  int out4=analogRead(sensor4);
+  int out5=analogRead(sensor5);
+  
+  // Determine the error based on the sensor values
+  error = (out1 + out2 + out3 + out4 + out5) / 16.0 - 981.0;
+
+  // Calculate the integral and derivative terms
+  integral += error;
+  derivative = error - previous_error;
+
+  // Calculate the outputs using the PID formula
+  output1 = kp * error + ki * integral + kd * derivative;
+  output2 = -output1;
+
+  // Set the motor speeds based on the outputs
+  int speed1 = constrain(255 - output1, 0, 255);
+  int speed2 = constrain(255 + output2, 0, 255);
+  Serial.print(out1);
+  Serial.print("|");
+  Serial.print(out2);
+  Serial.print("|");
+  Serial.print(out3);
+  Serial.print("|");
+  Serial.print(out4);
+  Serial.print("|");
+  Serial.print(out5);
+  Serial.println("");
+  analogWrite(motorA1, abs(speed1));
+  analogWrite(motorA2, abs(255-speed1));
+  analogWrite(motorB1, abs(speed2));
+  analogWrite(motorB2, abs(255-speed2));
+  previous_error = error;
+  delay(100);
+}
